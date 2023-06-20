@@ -1,6 +1,8 @@
 defmodule Bandit.HTTP1.Adapter do
   @moduledoc false
 
+  require Logger
+
   @type state :: :new | :headers_read | :no_body | :body_read | :sent | :chunking_out
 
   @behaviour Plug.Conn.Adapter
@@ -284,7 +286,11 @@ defmodule Bandit.HTTP1.Adapter do
     {:error, :unsupported_transfer_encoding}
   end
 
-  def read_req_body(%__MODULE__{}, _opts), do: raise(Bandit.BodyAlreadyReadError)
+  def read_req_body(%__MODULE__{} = req, _opts) do
+    Logger.error("Failed to read request body #{inspect(req)}")
+
+    raise(Bandit.BodyAlreadyReadError)
+  end
 
   @dialyzer {:no_improper_lists, do_read_chunk: 5}
   defp do_read_chunk(socket, buffer, body, read_size, read_timeout) do
